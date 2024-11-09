@@ -1,0 +1,15 @@
+from adafruit_circuitplayground import cp
+import time  # Necesario para los retrasos entre cambios
+
+# Configuración inicial del brillo de los NeoPixels
+cp.pixels.brightness = 0.1  # Ajusta el brillo al 10% para ahorro de energía
+
+# Color de la luz en formato RGB
+color = (255, 100, 255)  # Rosa (puedes cambiar los valores para otro color)
+
+# Ciclo infinito para mover la luz
+while True:
+    for i in range(10):  # Recorre los índices de los NeoPixels (0 a 9)
+        cp.pixels.fill((0, 0, 0))  # Apaga todos los píxeles antes de encender uno
+        cp.pixels[i] = color  # Enciende el píxel actual con el color definido
+        time.sleep(0.2)  # Espera 200 ms antes de mover al siguiente píxel
