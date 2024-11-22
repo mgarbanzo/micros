@@ -1,32 +1,7 @@
 #include "LoRaBoards.h"
 #include <RadioLib.h>
 #include <TinyGPS++.h>
-
-#if     defined(USING_SX1276)
-#ifndef CONFIG_RADIO_FREQ
-#define CONFIG_RADIO_FREQ           868.0
-#endif
-#ifndef CONFIG_RADIO_OUTPUT_POWER
-#define CONFIG_RADIO_OUTPUT_POWER   17
-#endif
-#ifndef CONFIG_RADIO_BW
-#define CONFIG_RADIO_BW             125.0
-#endif
-SX1276 radio = new Module(RADIO_CS_PIN, RADIO_DIO0_PIN, RADIO_RST_PIN, RADIO_DIO1_PIN);
-
-#elif   defined(USING_SX1278)
-#ifndef CONFIG_RADIO_FREQ
-#define CONFIG_RADIO_FREQ           433.0
-#endif
-#ifndef CONFIG_RADIO_OUTPUT_POWER
-#define CONFIG_RADIO_OUTPUT_POWER   17
-#endif
-#ifndef CONFIG_RADIO_BW
-#define CONFIG_RADIO_BW             125.0
-#endif
-SX1278 radio = new Module(RADIO_CS_PIN, RADIO_DIO0_PIN, RADIO_RST_PIN, RADIO_DIO1_PIN);
-
-#elif   defined(USING_SX1262)
+#if   defined(USING_SX1262)
 #ifndef CONFIG_RADIO_FREQ
 #define CONFIG_RADIO_FREQ           915.0
 #endif
@@ -36,71 +11,8 @@ SX1278 radio = new Module(RADIO_CS_PIN, RADIO_DIO0_PIN, RADIO_RST_PIN, RADIO_DIO
 #ifndef CONFIG_RADIO_BW
 #define CONFIG_RADIO_BW             125.0
 #endif
-
+#endif
 SX1262 radio = new Module(RADIO_CS_PIN, RADIO_DIO1_PIN, RADIO_RST_PIN, RADIO_BUSY_PIN);
-
-#elif   defined(USING_SX1280)
-#ifndef CONFIG_RADIO_FREQ
-#define CONFIG_RADIO_FREQ           2400.0
-#endif
-#ifndef CONFIG_RADIO_OUTPUT_POWER
-#define CONFIG_RADIO_OUTPUT_POWER   13
-#endif
-#ifndef CONFIG_RADIO_BW
-#define CONFIG_RADIO_BW             203.125
-#endif
-SX1280 radio = new Module(RADIO_CS_PIN, RADIO_DIO1_PIN, RADIO_RST_PIN, RADIO_BUSY_PIN);
-
-#elif  defined(USING_SX1280PA)
-#ifndef CONFIG_RADIO_FREQ
-#define CONFIG_RADIO_FREQ           2400.0
-#endif
-#ifndef CONFIG_RADIO_OUTPUT_POWER
-#define CONFIG_RADIO_OUTPUT_POWER   3           // PA Version power range : -18 ~ 3dBm
-#endif
-#ifndef CONFIG_RADIO_BW
-#define CONFIG_RADIO_BW             203.125
-#endif
-SX1280 radio = new Module(RADIO_CS_PIN, RADIO_DIO1_PIN, RADIO_RST_PIN, RADIO_BUSY_PIN);
-
-#elif   defined(USING_SX1268)
-#ifndef CONFIG_RADIO_FREQ
-#define CONFIG_RADIO_FREQ           433.0
-#endif
-#ifndef CONFIG_RADIO_OUTPUT_POWER
-#define CONFIG_RADIO_OUTPUT_POWER   22
-#endif
-#ifndef CONFIG_RADIO_BW
-#define CONFIG_RADIO_BW             125.0
-#endif
-SX1268 radio = new Module(RADIO_CS_PIN, RADIO_DIO1_PIN, RADIO_RST_PIN, RADIO_BUSY_PIN);
-
-#elif   defined(USING_LR1121)
-
-// The maximum power of LR1121 2.4G band can only be set to 13 dBm
-// #ifndef CONFIG_RADIO_FREQ
-// #define CONFIG_RADIO_FREQ           2450.0
-// #endif
-// #ifndef CONFIG_RADIO_OUTPUT_POWER
-// #define CONFIG_RADIO_OUTPUT_POWER   13
-// #endif
-// #ifndef CONFIG_RADIO_BW
-// #define CONFIG_RADIO_BW             125.0
-// #endif
-
-// The maximum power of LR1121 Sub 1G band can only be set to 22 dBm
-#ifndef CONFIG_RADIO_FREQ
-#define CONFIG_RADIO_FREQ           868.0
-#endif
-#ifndef CONFIG_RADIO_OUTPUT_POWER
-#define CONFIG_RADIO_OUTPUT_POWER   22
-#endif
-#ifndef CONFIG_RADIO_BW
-#define CONFIG_RADIO_BW             125.0
-#endif
-
-LR1121 radio = new Module(RADIO_CS_PIN, RADIO_DIO9_PIN, RADIO_RST_PIN, RADIO_BUSY_PIN);
-#endif
 
 // this function is called when a complete packet
 // is transmitted by the module
@@ -118,9 +30,13 @@ static uint32_t counter = 0;
 static String datatrans;
 //variables para transmicion
 String estadogps;
-String identificador="A";
+// se transmite el identificador de equipo
+String identificador="B";
+// se guarda el numero de satelites
 String numsat;
+// se guarda la latitud
 String lat;
+// se guarda la longitud
 String lon;
 int timeinit=millis();
 int timesend=1000;
@@ -135,9 +51,10 @@ void setup()
 //apartado de configuracion del lora 
     setupBoards();
 
-    // When the power is turned on, a delay is required.
+    // un atraso a la hora de iniciar el equipo
     delay(1500);
     Serial.begin(9600);
+    // variable de la pantalla
         if (!u8g2)
     {
         Serial.println("No SH1106 display found! Please check the connection.");
@@ -241,19 +158,6 @@ void setup()
         while (true);
     }
 
-#if !defined(USING_SX1280) && !defined(USING_LR1121) && !defined(USING_SX1280PA)
-    /*
-    * Sets current limit for over current protection at transmitter amplifier.
-    * SX1278/SX1276 : Allowed values range from 45 to 120 mA in 5 mA steps and 120 to 240 mA in 10 mA steps.
-    * SX1262/SX1268 : Allowed values range from 45 to 120 mA in 2.5 mA steps and 120 to 240 mA in 10 mA steps.
-    * NOTE: set value to 0 to disable overcurrent protection
-    * * * */
-    if (radio.setCurrentLimit(140) == RADIOLIB_ERR_INVALID_CURRENT_LIMIT) {
-        Serial.println(F("Selected current limit is invalid for this module!"));
-        while (true);
-    }
-#endif
-
     /*
     * Sets preamble length for LoRa or FSK modem.
     * SX1278/SX1276 : Allowed values range from 6 to 65535 in %LoRa mode or 0 to 65535 in FSK mode.
@@ -271,33 +175,6 @@ void setup()
         Serial.println(F("Selected CRC is invalid for this module!"));
         while (true);
     }
-
-#if  defined(USING_LR1121)
-    // LR1121
-    // set RF switch configuration for Wio WM1110
-    // Wio WM1110 uses DIO5 and DIO6 for RF switching
-    static const uint32_t rfswitch_dio_pins[] = {
-        RADIOLIB_LR11X0_DIO5, RADIOLIB_LR11X0_DIO6,
-        RADIOLIB_NC, RADIOLIB_NC, RADIOLIB_NC
-    };
-
-    static const Module::RfSwitchMode_t rfswitch_table[] = {
-        // mode                  DIO5  DIO6
-        { LR11x0::MODE_STBY,   { LOW,  LOW  } },
-        { LR11x0::MODE_RX,     { HIGH, LOW  } },
-        { LR11x0::MODE_TX,     { LOW,  HIGH } },
-        { LR11x0::MODE_TX_HP,  { LOW,  HIGH } },
-        { LR11x0::MODE_TX_HF,  { LOW,  LOW  } },
-        { LR11x0::MODE_GNSS,   { LOW,  LOW  } },
-        { LR11x0::MODE_WIFI,   { LOW,  LOW  } },
-        END_OF_MODE_TABLE,
-    };
-    radio.setRfSwitchTable(rfswitch_dio_pins, rfswitch_table);
-
-    // LR1121 TCXO Voltage 2.85~3.15V
-    radio.setTCXO(3.0);
-#endif
-
 #ifdef USING_DIO2_AS_RF_SWITCH
 #ifdef USING_SX1262
     // Some SX126x modules use DIO2 as RF switch. To enable
@@ -349,7 +226,7 @@ void setup()
     delay(1000);
 // apartado de preparacion pantalla
 
-
+// se imprime en la pantalla los parametros con los que se configuro el lora
     u8g2->clearBuffer();
     u8g2->setFont(u8g2_font_5x8_tr); // Set a compact font for better text fitting
     u8g2->drawStr(0, 10, String("Lora init "+lora).c_str());
@@ -404,38 +281,37 @@ void loop()
 
         u8g2->drawStr(0, 40, altStr);
         u8g2->drawStr(0, 50, speedStr);
+        // se codifgica el mensaje con la informacion 0,0, que los ignora el reseptor oled, luego se manda idendentificador, estado del gps, numero de satelites, latitud y longitud
         datatrans= String(0)+","+String(0)+","+identificador + ","+estadogps+","+numsat+","+lat+","+lon;
         u8g2->sendBuffer();
     }
     else
     {
       estadogps=String(0);
-        // Display a message if no valid GPS data is available
+        // se prepara el mensage de no conexion 0,0, que es lo que se ignora luego se manda el identificador y el estado de no conectado que es 0
         datatrans= String(0)+","+String(0)+","+identificador + ","+estadogps;
         u8g2->drawStr(0, 10, "Waiting for GPS2...");
          u8g2->sendBuffer();
     }
     smartDelay(1000);
-
+// se encia mensages cada timesend
   if (millis()-timeinit>timesend){
     timeinit=millis();
     if (transmittedFlag) {
 
 
-        // reset flag
+        // identificador de que se esta mandando un mensage
         transmittedFlag = false;
-
+// enciende la led
         flashLed();
 
 
         if (transmissionState == RADIOLIB_ERR_NONE) {
             // packet was successfully sent
             Serial.println(F("transmission finished!"));
+            // se desplega en la pantalla TF de que termino la transmicion
             u8g2->drawStr(5, 60, "TF");
             u8g2->sendBuffer();
-            // NOTE: when using interrupt-driven transmit method,
-            //       it is not possible to automatically measure
-            //       transmission data rate using getDataRate()
         } else {
             Serial.print(F("failed, code "));
             Serial.println(transmissionState);
