@@ -31,7 +31,7 @@ static String datatrans;
 //variables para transmicion
 String estadogps;
 // se transmite el identificador de equipo
-String identificador="B";
+String identificador="D";
 // se guarda el numero de satelites
 String numsat;
 // se guarda la latitud
@@ -256,8 +256,13 @@ void loop()
         char lonStr[MAX_LINE_LENGTH];
         snprintf(latStr, MAX_LINE_LENGTH, "Lat: %.6f", gps.location.lat());
         snprintf(lonStr, MAX_LINE_LENGTH, "Lon: %.6f", gps.location.lng());
-        lat=String(gps.location.lat());
-        lon=String(gps.location.lng());
+        // envia datos de latitud solamente al reseptor.
+        char latonly[MAX_LINE_LENGTH];
+        char lononly[MAX_LINE_LENGTH];
+        snprintf(latonly, MAX_LINE_LENGTH, "%.6f", gps.location.lat());
+        snprintf(lononly, MAX_LINE_LENGTH, "%.6f", gps.location.lng());
+        lat=String(latonly);
+        lon=String(lononly);
 
 
         u8g2->drawStr(0, 10, latStr);
