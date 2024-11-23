@@ -384,7 +384,7 @@ void loopPMU()
     if (PMU->isBatChargeDoneIrq()) {
         Serial.println("isBatChagerDone");
     }
-    if (PMU->isBatChargeDoneIrq()) {
+    if (PMU->isBatChargeStartIrq()) {
         Serial.println("isBatChagerStart");
     }
     // Clear PMU Interrupt Status Register
