@@ -381,10 +381,10 @@ void loopPMU()
     if (PMU->isPekeyLongPressIrq()) {
         Serial.println("isPekeyLongPress");
     }
-    if (PMU->isBatChagerDoneIrq()) {
+    if (PMU->isBatChargeDoneIrq()) {
         Serial.println("isBatChagerDone");
     }
-    if (PMU->isBatChagerStartIrq()) {
+    if (PMU->isBatChargeStartIrq()) {
         Serial.println("isBatChagerStart");
     }
     // Clear PMU Interrupt Status Register
